@@ -113,6 +113,7 @@ export class Version implements Command {
     ]
 
     if (enginesMetaInfoErrors.length > 0) {
+      process.exitCode = 1
       enginesMetaInfoErrors.forEach((e) => console.error(e))
     }
 
