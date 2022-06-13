@@ -26,6 +26,7 @@ import { escapeJson, ExportCollector } from './helpers'
 import { InputType } from './Input'
 import { Model } from './Model'
 import { PrismaClientClass } from './PrismaClient'
+import { Symbols } from './Symbols'
 
 export interface TSClientOptions {
   projectRoot: string
@@ -48,9 +49,12 @@ export interface TSClientOptions {
 export class TSClient implements Generatable {
   protected readonly dmmf: DMMFHelper
   protected readonly dmmfString: string
+  private readonly symbols: Symbols
+
   constructor(protected readonly options: TSClientOptions) {
     this.dmmfString = escapeJson(JSON.stringify(options.document))
     this.dmmf = new DMMFHelper(klona(options.document))
+    this.symbols = new Symbols(this.dmmf)
   }
 
   public async toJS(edge = false): Promise<string> {
@@ -97,6 +101,9 @@ export class TSClient implements Generatable {
     const code = `${commonCodeJS({ ...this.options, browser: false })}
 ${buildRequirePath(edge)}
 ${buildDirname(edge, relativeOutdir, runtimeDir)}
+
+${this.symbols.toJS()}
+
 /**
  * Enums
  */
@@ -218,6 +225,11 @@ ${countTypes.map((t) => t.toTS()).join('\n')}
  * Models
  */
 ${modelAndTypes.map((model) => model.toTS()).join('\n')}
+
+/**
+ * Symbols
+ */
+${this.symbols.toTS()}
 
 /**
  * Enums
